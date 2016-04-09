@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -40,26 +41,41 @@ func doCase(caseno int, input string) {
 
 	fmt.Printf("Case #%d:\n", caseno)
 
-	for j := 0; j < J; j++ {
-		for {
-			if divs, ok := valid(state); ok {
-				fmt.Printf("%s %s\n", string(state), strings.Join(divs, " "))
-				next(state)
-				break
+	cin := make(chan string)
+	cout := make(chan string)
+
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func(cin chan string, cout chan string) {
+			for in := range cin {
+				divs, ok := valid(in)
+				if ok {
+					cout <- fmt.Sprintf("%s %s", in, strings.Join(divs, " "))
+				}
 			}
+
+		}(cin, cout)
+	}
+
+	go func() {
+		for {
+			cin <- string(state)
 			next(state)
 		}
+	}()
+
+	for j := 0; j < J; j++ {
+		fmt.Println(<-cout)
 	}
 }
 
-func valid(state []byte) ([]string, bool) {
+func valid(state string) ([]string, bool) {
 	if DEBUG {
-		fmt.Printf("DEBUG   Trying %s\n", string(state))
+		fmt.Printf("DEBUG   Trying %s\n", state)
 	}
 	divs := make([]string, 9)
 
 	for base := 2; base <= 10; base++ {
-		val, _ := strconv.ParseInt(string(state), base, 0)
+		val, _ := strconv.ParseInt(state, base, 0)
 		if DEBUG {
 			fmt.Printf("DEBUG     base %d is %d ... ", base, val)
 		}
