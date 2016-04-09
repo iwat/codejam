@@ -87,10 +87,18 @@ func divisor(val int64) int {
 	if val%2 == 0 {
 		return 2
 	}
+	if val%3 == 0 {
+		return 3
+	}
 
-	for i := int64(3); i <= int64(math.Sqrt(float64(val))); i += 2 {
-		if val%i == 0 {
-			return int(i)
+	for k := int64(1); k <= int64(math.Sqrt(float64(val))); k++ {
+		check := 6*k - 1
+		if val%check == 0 {
+			return int(check)
+		}
+		check = 6*k + 1
+		if val%check == 0 {
+			return int(check)
 		}
 	}
 	return 0
