@@ -3,9 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
+	"math/big"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 )
@@ -32,50 +31,30 @@ func doCase(caseno int, input string) {
 		fmt.Printf("DEBUG Case #%d: INPUT %d %d\n", caseno, N, J)
 	}
 
-	state := make([]byte, N)
-	for i := 1; i < len(state)-1; i++ {
-		state[i] = '0'
-	}
-	state[0] = '1'
-	state[len(state)-1] = '1'
-
 	fmt.Printf("Case #%d:\n", caseno)
+	state, _ := big.NewInt(0).SetString("1"+strings.Repeat("0", N-2)+"1", 2)
+	for {
+		divs, ok := valid(state)
+		if ok {
+			fmt.Printf("%s %s\n", state.Text(2), strings.Join(divs, " "))
+			J--
 
-	cin := make(chan string)
-	cout := make(chan string)
-
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go func(cin chan string, cout chan string) {
-			for in := range cin {
-				divs, ok := valid(in)
-				if ok {
-					cout <- fmt.Sprintf("%s %s", in, strings.Join(divs, " "))
-				}
+			if J == 0 {
+				break
 			}
-
-		}(cin, cout)
-	}
-
-	go func() {
-		for {
-			cin <- string(state)
-			next(state)
 		}
-	}()
-
-	for j := 0; j < J; j++ {
-		fmt.Println(<-cout)
+		state.Add(state, BIG_2)
 	}
 }
 
-func valid(state string) ([]string, bool) {
+func valid(state *big.Int) ([]string, bool) {
 	if DEBUG {
 		fmt.Printf("DEBUG   Trying %s\n", state)
 	}
 	divs := make([]string, 9)
 
 	for base := 2; base <= 10; base++ {
-		val, _ := strconv.ParseInt(state, base, 0)
+		val, _ := big.NewInt(0).SetString(state.Text(2), base)
 		if DEBUG {
 			fmt.Printf("DEBUG     base %d is %d ... ", base, val)
 		}
@@ -84,7 +63,7 @@ func valid(state string) ([]string, bool) {
 			fmt.Printf("%d\n", div)
 		}
 		if div > 0 {
-			divs[base-2] = strconv.Itoa(div)
+			divs[base-2] = strconv.Itoa(int(div))
 		} else {
 			return divs, false
 		}
@@ -99,37 +78,31 @@ func valid(state string) ([]string, bool) {
 	return divs, true
 }
 
-func divisor(val int64) int {
-	if val%2 == 0 {
+var BIG_0 = big.NewInt(0)
+var BIG_1_2 = big.NewInt(1)
+var BIG_1 = big.NewInt(1)
+var BIG_2 = big.NewInt(2)
+var BIG_3 = big.NewInt(3)
+var BIG_6 = big.NewInt(6)
+var BIG_1000 = big.NewInt(1000)
+
+func divisor(val *big.Int) uint64 {
+	test := big.NewInt(0)
+	if test.Mod(val, BIG_2).Cmp(BIG_0) == 0 {
 		return 2
 	}
-	if val%3 == 0 {
+	if test.Mod(val, BIG_3).Cmp(BIG_0) == 0 {
 		return 3
 	}
 
-	for k := int64(1); k <= int64(math.Sqrt(float64(val))); k++ {
-		check := 6*k - 1
-		if val%check == 0 {
-			return int(check)
+	div := big.NewInt(0)
+	for k := big.NewInt(6); k.Cmp(BIG_1000) < 0 && k.Cmp(val) < 0; k.Add(k, BIG_6) {
+		if test.Mod(val, div.Sub(k, BIG_1)).Cmp(BIG_0) == 0 {
+			return div.Uint64()
 		}
-		check = 6*k + 1
-		if val%check == 0 {
-			return int(check)
+		if test.Mod(val, div.Add(k, BIG_1)).Cmp(BIG_0) == 0 {
+			return div.Uint64()
 		}
 	}
 	return 0
-}
-
-func next(state []byte) {
-	now, _ := strconv.ParseInt(string(state), 2, 0)
-	next := now + 2
-	newstate := strconv.FormatInt(next, 2)
-
-	if len(newstate) != len(state) {
-		panic("new state is too large")
-	}
-
-	for i := 0; i < len(newstate); i++ {
-		state[i] = newstate[i]
-	}
 }
