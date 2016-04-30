@@ -37,7 +37,7 @@ func doCase(caseno int, input string) {
 	input = process(input, "R", "THREE", 3, numbers)
 	input = process(input, "F", "FIVE", 5, numbers)
 	input = process(input, "V", "SEVEN", 7, numbers)
-	input = process(input, "N", "NINE", 9, numbers)
+	input = process(input, "I", "NINE", 9, numbers)
 
 	if len(input) != 0 {
 		panic(input)
