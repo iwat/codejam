@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -33,40 +33,32 @@ func doCase(caseno int, input string) {
 	j := []byte(splitted[1])
 
 	for i := 0; i < len(c); i++ {
-		cmp := bytes.Compare(c[0:i], j[0:i])
-		if DEBUG {
-			fmt.Print(string(c), " vs ", string(j), " : ", string(c[i]), " ", string(j[i]), " : ", cmp, " > ")
-		}
-		if c[i] == '?' && j[i] == '?' {
-			if cmp == 0 {
-				c[i] = '0'
-				j[i] = '0'
-			} else if cmp == -1 {
-				c[i] = '9'
-				j[i] = '0'
-			} else if cmp == 1 {
-				c[i] = '0'
-				j[i] = '9'
-			}
-		} else if c[i] != '?' && j[i] == '?' {
-			if cmp == 0 {
-				j[i] = c[i]
-			} else if cmp == -1 {
-				j[i] = '0'
-			} else if cmp == 1 {
-				j[i] = '9'
-			}
-		} else if c[i] == '?' && j[i] != '?' {
-			if cmp == 0 {
-				c[i] = j[i]
-			} else if cmp == -1 {
-				c[i] = '0'
-			} else if cmp == 1 {
-				c[i] = '9'
+		bestN := -1
+		bestM := -1
+		bestDiff := new(big.Int)
+		bestDiff.SetString("999999999999999999", 10)
+		for n := 0; n <= 9; n++ {
+			for m := 0; m <= 9; m++ {
+				bigC := new(big.Int)
+				bigJ := new(big.Int)
+				bigC.SetString(strings.Replace(string(c), "?", strconv.Itoa(n), -1), 10)
+				bigJ.SetString(strings.Replace(string(j), "?", strconv.Itoa(m), -1), 10)
+
+				newDiff := new(big.Int)
+				newDiff.Abs(newDiff.Sub(bigC, bigJ))
+				if newDiff.Cmp(bestDiff) < 0 {
+					bestDiff = newDiff
+					bestN = n
+					bestM = m
+				}
 			}
 		}
-		if DEBUG {
-			fmt.Println(string(c), string(j))
+
+		if c[i] == '?' {
+			c[i] = '0' + byte(bestN)
+		}
+		if j[i] == '?' {
+			j[i] = '0' + byte(bestM)
 		}
 	}
 
