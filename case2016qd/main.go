@@ -3,16 +3,21 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"strconv"
 	"strings"
 )
 
-const DEBUG = true
+var debug = log.New(os.Stderr, "DEBUG ", log.LstdFlags)
 
 func main() {
-	fin, _ := os.Open(os.Args[1])
+	fin, err := os.Open(os.Args[1])
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	scanner := bufio.NewScanner(fin)
 	scanner.Scan()
 	ncases, _ := strconv.Atoi(scanner.Text())
@@ -28,17 +33,13 @@ func doCase(caseno int, input string) {
 	K, _ := strconv.Atoi(s[0])
 	C, _ := strconv.Atoi(s[1])
 	S, _ := strconv.Atoi(s[2])
-	if DEBUG {
-		fmt.Printf("DEBUG Case #%d: INPUT %d %d %d\n", caseno, K, C, S)
-	}
+	debug.Printf("Case #%d: INPUT %d %d %d", caseno, K, C, S)
 
 	ccomb := make(chan string)
 	go combine(K, C, ccomb)
 
 	for comb := range ccomb {
-		if DEBUG {
-			fmt.Printf("DEBUG   %s\n", comb)
-		}
+		debug.Printf("%s", comb)
 	}
 }
 

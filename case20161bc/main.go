@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const DEBUG = false
+const DEBUG = true
 
 func main() {
 	fin, _ := os.Open(os.Args[1])
@@ -19,40 +19,67 @@ func main() {
 	for i := 0; i < ncases; i++ {
 		scanner.Scan()
 		nTopics, _ := strconv.Atoi(scanner.Text())
-		topics := make(map[string]bool, nTopics)
+		topics := make(map[string]int, nTopics)
 		for j := 0; j < nTopics; j++ {
 			scanner.Scan()
-			topics[scanner.Text()] = true
+			topics[scanner.Text()]++
 		}
 		doCase(i+1, topics)
 	}
 }
 
-func doCase(caseno int, inputs map[string]bool) {
-	firsts := make(map[string]bool)
-	seconds := make(map[string]bool)
+func doCase(caseno int, inputs map[string]int) {
+	firsts := make(map[string]int)
+	seconds := make(map[string]int)
 
 	for input, _ := range inputs {
 		words := strings.SplitN(input, " ", 2)
-		firsts[words[0]] = true
-		seconds[words[1]] = true
+		firsts[words[0]]++
+		seconds[words[1]]++
 	}
 
-	combs := make(map[string]bool)
-
-	for first, _ := range firsts {
-		for second, _ := range seconds {
-			if first == second {
+	fakes := 0
+	for input, _ := range inputs {
+		words := strings.SplitN(input, " ", 2)
+		if firsts[words[0]] == 1 || seconds[words[1]] == 1 {
+			continue
+		}
+		fake := false
+		for first, _ := range firsts {
+			comb := first + " " + words[1]
+			if comb == input {
 				continue
 			}
-			comb := first + " " + second
-			if _, ok := inputs[comb]; !ok {
+			if _, ok := inputs[comb]; ok {
 				if DEBUG {
-					fmt.Println("DEBUG", comb)
+					fmt.Println("FAKE", input, "by", comb)
 				}
-				combs[comb] = true
+				fake = true
+				break
 			}
 		}
+		if fake {
+			fakes++
+		}
+		continue
+
+		for second, _ := range seconds {
+			comb := words[0] + " " + second
+			if comb == input {
+				continue
+			}
+			if _, ok := inputs[comb]; ok {
+				if DEBUG {
+					fmt.Println("FAKE", input, "by", comb)
+				}
+				fake = true
+				break
+			}
+		}
+		if fake {
+			fakes++
+		}
 	}
-	fmt.Printf("Case #%d: %d\n", caseno, len(combs))
+
+	fmt.Printf("Case #%d: %d\n", caseno, fakes)
 }
