@@ -29,38 +29,47 @@ func solve(cells []int64, r, c int) int64 {
 		for _, i := range cells {
 			interest += i
 		}
-		for rn := 0; rn < r; rn++ {
-			fmt.Println(interest, cells[rn*c:(rn+1)*c])
-		}
+		//for rn := 0; rn < r; rn++ {
+		//	fmt.Println(cells[rn*c : (rn+1)*c])
+		//}
+		//fmt.Println("Interest", interest)
 		var eliminations []int
 		for rn := 0; rn < r; rn++ {
-			rowSum := int64(0)
-			rowN := int64(0)
 			for cn := 0; cn < c; cn++ {
-				if cells[rn*c+cn] > 0 {
-					rowSum += cells[rn*c+cn]
-					rowN++
+				sum := cells[rn*c+cn]
+				n := 1
+				if sum == 0 {
+					continue
 				}
-			}
-			avg := float64(rowSum) / float64(rowN)
-			for cn := 0; cn < c; cn++ {
-				if cells[rn*c+cn] > 0 && float64(cells[rn*c+cn]) < avg {
-					eliminations = append(eliminations, rn*c+cn)
+				for rrn := rn - 1; rrn >= 0; rrn-- {
+					if cells[rrn*c+cn] > 0 {
+						sum += cells[rrn*c+cn]
+						n++
+						break
+					}
 				}
-			}
-		}
-		for cn := 0; cn < c; cn++ {
-			colSum := int64(0)
-			colN := int64(0)
-			for rn := 0; rn < r; rn++ {
-				if cells[rn*c+cn] > 0 {
-					colSum += cells[rn*c+cn]
-					colN++
+				for rrn := rn + 1; rrn < r; rrn++ {
+					if cells[rrn*c+cn] > 0 {
+						sum += cells[rrn*c+cn]
+						n++
+						break
+					}
 				}
-			}
-			avg := float64(colSum) / float64(colN)
-			for rn := 0; rn < r; rn++ {
-				if cells[rn*c+cn] > 0 && float64(cells[rn*c+cn]) < avg {
+				for rcn := cn - 1; rcn >= 0; rcn-- {
+					if cells[rn*c+rcn] > 0 {
+						sum += cells[rn*c+rcn]
+						n++
+						break
+					}
+				}
+				for rcn := cn + 1; rcn < c; rcn++ {
+					if cells[rn*c+rcn] > 0 {
+						sum += cells[rn*c+rcn]
+						n++
+						break
+					}
+				}
+				if n > 1 && float64(cells[rn*c+cn]) < float64(sum)/float64(n) {
 					eliminations = append(eliminations, rn*c+cn)
 				}
 			}
@@ -68,6 +77,7 @@ func solve(cells []int64, r, c int) int64 {
 		if len(eliminations) == 0 {
 			break
 		}
+		//fmt.Println("Elim", eliminations)
 		for _, e := range eliminations {
 			cells[e] = 0
 		}
